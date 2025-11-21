@@ -408,56 +408,87 @@ export default function AuctionsPage() {
 
         {/* Filters */}
         <AnimatedCard className="p-6 border border-border mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Filter className="h-5 w-5 text-muted-foreground" />
+              Filters
+            </h2>
+            {(searchQuery || statusFilter !== 'all' || typeFilter !== 'all' || sortBy !== 'date') && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('all');
+                  setTypeFilter('all');
+                  setSortBy('date');
+                }}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              >
+                <X className="h-4 w-4" />
+                Clear All
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
               <input
                 type="text"
                 placeholder="Search auctions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full pl-10 pr-10 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all hover:border-primary/50"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="all">All Status</option>
-              <option value="ANNOUNCED">Announced</option>
-              <option value="OPEN">Open</option>
-              <option value="CLOSED">Closed</option>
-              <option value="RESULTS_PUBLISHED">Results Published</option>
-              <option value="SETTLED">Settled</option>
-            </select>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as any)}
-              className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="all">All Types</option>
-              <option value="TREASURY_BILL">Treasury Bills</option>
-              <option value="TREASURY_BOND">Treasury Bonds</option>
-            </select>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="date">Sort by Date</option>
-              <option value="amount">Sort by Amount</option>
-              <option value="closing">Sort by Closing</option>
-              <option value="status">Sort by Status</option>
-            </select>
+            <div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                className="w-full px-4 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all hover:border-primary/50 appearance-none cursor-pointer"
+              >
+                <option value="all">All Status</option>
+                <option value="ANNOUNCED">📅 Announced</option>
+                <option value="OPEN">🔓 Open</option>
+                <option value="CLOSED">⏰ Closed</option>
+                <option value="RESULTS_PUBLISHED">📊 Results Published</option>
+                <option value="SETTLED">✅ Settled</option>
+              </select>
+            </div>
+            <div>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as any)}
+                className="w-full px-4 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all hover:border-primary/50 appearance-none cursor-pointer"
+              >
+                <option value="all">All Types</option>
+                <option value="TREASURY_BILL">📄 Treasury Bills</option>
+                <option value="TREASURY_BOND">📜 Treasury Bonds</option>
+              </select>
+            </div>
+            <div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="w-full px-4 py-2.5 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all hover:border-primary/50 appearance-none cursor-pointer"
+              >
+                <option value="date">📅 Sort by Date</option>
+                <option value="amount">💰 Sort by Amount</option>
+                <option value="closing">⏰ Sort by Closing</option>
+                <option value="status">📊 Sort by Status</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-center">
+              <div className="text-sm text-muted-foreground text-center">
+                {filteredAuctions?.length || 0} of {mockAuctions.length} auctions
+              </div>
+            </div>
           </div>
         </AnimatedCard>
 
@@ -585,21 +616,43 @@ export default function AuctionsPage() {
                   )}
 
                   {/* Actions */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 pt-4 border-t border-border">
                     {auction.status === 'OPEN' && (
-                      <AnimatedButton variant="primary" className="flex-1">
+                      <AnimatedButton 
+                        variant="primary" 
+                        className="flex-1"
+                        onClick={() => window.location.href = `/auctions/${auction.id}`}
+                      >
                         <ArrowUpRight className="h-4 w-4 mr-2" />
                         Place Bid
                       </AnimatedButton>
                     )}
-                    <AnimatedButton variant="outline" className="flex-1">
+                    <AnimatedButton 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => window.location.href = `/auctions/${auction.id}`}
+                    >
                       <FileText className="h-4 w-4 mr-2" />
                       View Details
                     </AnimatedButton>
                     {auction.results && (
-                      <AnimatedButton variant="outline" className="flex-1">
+                      <AnimatedButton 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => window.location.href = `/auctions/results/${auction.id}`}
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         View Results
+                      </AnimatedButton>
+                    )}
+                    {auction.userBid && (
+                      <AnimatedButton 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => alert(`Bid Reference: ${auction.userBid?.bidReference}\nStatus: ${auction.userBid?.status}\nAmount: ₵${auction.userBid?.quantity.toLocaleString()}`)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Your Bid
                       </AnimatedButton>
                     )}
                   </div>
@@ -613,13 +666,32 @@ export default function AuctionsPage() {
             <h3 className="text-xl font-bold mb-2">No auctions found</h3>
             <p className="text-muted-foreground mb-6">
               {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
-                ? 'Try adjusting your search or filters'
-                : 'No Treasury auctions are currently available'}
+                ? 'Try adjusting your search or filters to find available auctions'
+                : 'No Treasury auctions are currently available. Check back soon for new opportunities.'}
             </p>
-            <AnimatedButton variant="outline">
-              <Building2 className="h-4 w-4 mr-2" />
-              Learn About Treasury Auctions
-            </AnimatedButton>
+            <div className="flex items-center gap-3 justify-center">
+              <AnimatedButton 
+                variant="outline"
+                onClick={() => window.location.href = '/auctions/how-it-works'}
+              >
+                <Building2 className="h-4 w-4 mr-2" />
+                Learn About Treasury Auctions
+              </AnimatedButton>
+              {(searchQuery || statusFilter !== 'all' || typeFilter !== 'all') && (
+                <AnimatedButton 
+                  variant="primary"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('all');
+                    setTypeFilter('all');
+                    setSortBy('date');
+                  }}
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </AnimatedButton>
+              )}
+            </div>
           </AnimatedCard>
         )}
       </div>

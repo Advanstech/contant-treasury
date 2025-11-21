@@ -101,6 +101,122 @@ export interface MarketData {
   security?: any;
 }
 
+// ============================================================================
+// ADMIN TRADING INTERFACES (4-Category System)
+// ============================================================================
+
+export interface TradingStats {
+  // Treasury Bills
+  totalTreasuryBillVolume: number;
+  activeTreasuryBillAuctions: number;
+  treasuryBillYield: number;
+  
+  // Government Bonds
+  totalGovernmentBondVolume: number;
+  activeGovernmentBondAuctions: number;
+  governmentBondYield: number;
+  
+  // Repo Trading
+  activeRepoPositions: number;
+  totalRepoExposure: number;
+  averageRepoRate: number;
+  
+  // Corporate Bonds
+  activeBondIssues: number;
+  totalBondVolume: number;
+  averageBondYield: number;
+  
+  // Overall
+  totalTrades: number;
+  totalValue: number;
+  marketParticipants: number;
+}
+
+export interface Auction {
+  id: string;
+  securityCode: string;
+  securityName: string;
+  auctionDate: string;
+  settlementDate: string;
+  status: string;
+  totalBids: number;
+  totalAmount: number;
+  minBidAmount: number;
+  maxBidAmount: number;
+  cutoffYield: number;
+  weightedAvgYield: number;
+  coverRatio: number;
+}
+
+export interface AuctionsResponse {
+  auctions: Auction[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface RepoAgreement {
+  id: string;
+  securityCode: string;
+  securityName: string;
+  borrowerName: string;
+  lenderName: string;
+  principalAmount: number;
+  repoRate: number;
+  haircutPercent: number;
+  collateralValue: number;
+  startDate: string;
+  maturityDate: string;
+  term: string;
+  status: string;
+}
+
+export interface RepoAgreementsResponse {
+  repoAgreements: RepoAgreement[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface CorporateBondIssue {
+  id: string;
+  securityCode: string;
+  securityName: string;
+  issuerName: string;
+  issuerSector: string;
+  issueSize: number;
+  issuePrice: number;
+  couponType: string;
+  couponRate: number;
+  frequency: string;
+  announcementDate: string;
+  bookbuildingStart: string;
+  bookbuildingEnd: string;
+  pricingDate: string;
+  allocationDate: string;
+  listingDate: string;
+  status: string;
+  prospectusUrl: string;
+  isinCode: string;
+  listingVenue: string;
+}
+
+export interface CorporateBondIssuesResponse {
+  bondIssues: CorporateBondIssue[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 const tradingApi = {
   // ============================================================================
   // ORDER MANAGEMENT
@@ -440,6 +556,139 @@ const tradingApi = {
 
     if (!response.ok) {
       throw new Error('Failed to fetch market statistics');
+    }
+
+    return response.json();
+  },
+
+  // ============================================================================
+  // ADMIN TRADING API (4-Category System)
+  // ============================================================================
+
+  /**
+   * Get comprehensive trading statistics for admin dashboard
+   */
+  getTradingStats: async (token: string): Promise<TradingStats> => {
+    const response = await fetch(`${API_BASE_URL}/admin/trading/stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch trading statistics');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get treasury bills auctions with filtering and pagination
+   */
+  getTreasuryBills: async (filters: {
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }, token: string): Promise<AuctionsResponse> => {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+
+    const response = await fetch(`${API_BASE_URL}/admin/trading/treasury-bills?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch treasury bills');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get government bonds auctions with filtering and pagination
+   */
+  getGovernmentBonds: async (filters: {
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }, token: string): Promise<AuctionsResponse> => {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+
+    const response = await fetch(`${API_BASE_URL}/admin/trading/government-bonds?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch government bonds');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get repo agreements with filtering and pagination
+   */
+  getRepoAgreements: async (filters: {
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }, token: string): Promise<RepoAgreementsResponse> => {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+
+    const response = await fetch(`${API_BASE_URL}/admin/trading/repos?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch repo agreements');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * Get corporate bond issues with filtering and pagination
+   */
+  getCorporateBondIssues: async (filters: {
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }, token: string): Promise<CorporateBondIssuesResponse> => {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
+
+    const response = await fetch(`${API_BASE_URL}/admin/trading/corporate-bonds?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch corporate bond issues');
     }
 
     return response.json();

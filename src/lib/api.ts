@@ -99,9 +99,17 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
-          const response = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh`, {}, {
-            headers: { Authorization: `Bearer ${refreshToken}` },
+          // Create a new axios instance without the auth interceptor to avoid circular calls
+          const refreshClient = axios.create({
+            baseURL: API_BASE_URL,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${refreshToken}`,
+            },
+            timeout: 30000,
           });
+
+          const response = await refreshClient.post('/api/v1/auth/refresh', {});
 
           const { accessToken, refreshToken: newRefreshToken } = response.data;
           
@@ -163,6 +171,7 @@ export interface LoginDto {
 export interface TokenResponse {
   accessToken: string;
   refreshToken: string;
+  message?: string; // Optional success message from register
 }
 
 export interface UserProfile {

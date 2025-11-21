@@ -17,34 +17,16 @@ import {
   Plus
 } from 'lucide-react';
 import Link from 'next/link';
-
-interface TradingStats {
-  // Treasury Trading
-  totalTreasuryVolume: number;
-  activeAuctions: number;
-  treasuryYield: number;
-  
-  // Repo Trading
-  activeRepoPositions: number;
-  totalRepoExposure: number;
-  averageRepoRate: number;
-  
-  // Corporate Bonds
-  activeBondIssues: number;
-  totalBondVolume: number;
-  averageBondYield: number;
-  
-  // Overall
-  totalTrades: number;
-  totalValue: number;
-  marketParticipants: number;
-}
+import tradingApi, { TradingStats } from '@/lib/trading-api';
 
 export default function TradingPage() {
   const [stats, setStats] = useState<TradingStats>({
-    totalTreasuryVolume: 0,
-    activeAuctions: 0,
-    treasuryYield: 0,
+    totalTreasuryBillVolume: 0,
+    activeTreasuryBillAuctions: 0,
+    treasuryBillYield: 0,
+    totalGovernmentBondVolume: 0,
+    activeGovernmentBondAuctions: 0,
+    governmentBondYield: 0,
     activeRepoPositions: 0,
     totalRepoExposure: 0,
     averageRepoRate: 0,
@@ -56,33 +38,7 @@ export default function TradingPage() {
     marketParticipants: 0,
   });
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchTradingStats();
-  }, []);
-
-  const fetchTradingStats = async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/v1/admin/trading/stats`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error('Error fetching trading stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [error, setError] = useState<string | null>(null);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-GH', {
@@ -93,14 +49,48 @@ export default function TradingPage() {
     }).format(amount);
   };
 
-  const formatPercent = (value: number) => {
-    return `${value.toFixed(2)}%`;
+  const fetchTradingStats = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const data = await tradingApi.getTradingStats(token);
+      setStats(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching trading stats:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch trading statistics');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchTradingStats();
+  }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Failed to load trading data</p>
+          <button 
+            onClick={fetchTradingStats}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -194,9 +184,9 @@ export default function TradingPage() {
       </div>
 
       {/* Product Type Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Treasury Trading */}
-        <Link href="/admin/trading/treasury" className="group">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Treasury Bills */}
+        <Link href="/admin/trading/treasury-bills" className="group">
           <div className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-all cursor-pointer">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
@@ -204,31 +194,56 @@ export default function TradingPage() {
                   <Shield className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Treasury Trading</h3>
-                  <p className="text-sm text-muted-foreground">Government Securities</p>
+                  <h3 className="font-semibold text-foreground">Treasury Bills</h3>
+                  <p className="text-sm text-muted-foreground">Short-term Government</p>
                 </div>
               </div>
               <Eye className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </div>
-            
             <div className="space-y-4">
               <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Volume</span>
+                <span className="font-semibold">{formatCurrency(stats.totalTreasuryBillVolume)}</span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Active Auctions</span>
-                <span className="text-sm font-medium text-foreground">{stats.activeAuctions}</span>
+                <span className="font-semibold">{stats.activeTreasuryBillAuctions}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Today's Volume</span>
-                <span className="text-sm font-medium text-foreground">{formatCurrency(stats.totalTreasuryVolume)}</span>
+                <span className="text-sm text-muted-foreground">Yield</span>
+                <span className="font-semibold">{stats.treasuryBillYield.toFixed(2)}%</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Average Yield</span>
-                <span className="text-sm font-medium text-foreground">{formatPercent(stats.treasuryYield)}</span>
-              </div>
-              <div className="pt-2 border-t border-border">
-                <div className="flex items-center text-sm text-primary">
-                  <span>Manage Treasury Trading</span>
-                  <ArrowUpRight className="w-4 h-4 ml-1" />
+            </div>
+          </div>
+        </Link>
+
+        {/* Government Bonds */}
+        <Link href="/admin/trading/government-bonds" className="group">
+          <div className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-all cursor-pointer">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500/10 rounded-lg group-hover:bg-green-500/20 transition-colors">
+                  <Building className="w-5 h-5 text-green-500" />
                 </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Government Bonds</h3>
+                  <p className="text-sm text-muted-foreground">Long-term Government</p>
+                </div>
+              </div>
+              <Eye className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+            </div>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Volume</span>
+                <span className="font-semibold">{formatCurrency(stats.totalGovernmentBondVolume)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Active Auctions</span>
+                <span className="font-semibold">{stats.activeGovernmentBondAuctions}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Yield</span>
+                <span className="font-semibold">{stats.governmentBondYield.toFixed(2)}%</span>
               </div>
             </div>
           </div>
@@ -239,8 +254,8 @@ export default function TradingPage() {
           <div className="bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-all cursor-pointer">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/10 rounded-lg group-hover:bg-green-500/20 transition-colors">
-                  <Activity className="w-5 h-5 text-green-500" />
+                <div className="p-2 bg-orange-500/10 rounded-lg group-hover:bg-orange-500/20 transition-colors">
+                  <Activity className="w-5 h-5 text-orange-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">Repo Trading</h3>
@@ -249,25 +264,18 @@ export default function TradingPage() {
               </div>
               <Eye className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </div>
-            
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Active Positions</span>
-                <span className="text-sm font-medium text-foreground">{stats.activeRepoPositions}</span>
+                <span className="font-semibold">{stats.activeRepoPositions}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total Exposure</span>
-                <span className="text-sm font-medium text-foreground">{formatCurrency(stats.totalRepoExposure)}</span>
+                <span className="text-sm text-muted-foreground">Exposure</span>
+                <span className="font-semibold">{formatCurrency(stats.totalRepoExposure)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Average Rate</span>
-                <span className="text-sm font-medium text-foreground">{formatPercent(stats.averageRepoRate)}</span>
-              </div>
-              <div className="pt-2 border-t border-border">
-                <div className="flex items-center text-sm text-primary">
-                  <span>Manage Repo Positions</span>
-                  <ArrowUpRight className="w-4 h-4 ml-1" />
-                </div>
+                <span className="text-sm text-muted-foreground">Avg Rate</span>
+                <span className="font-semibold">{stats.averageRepoRate.toFixed(2)}%</span>
               </div>
             </div>
           </div>
@@ -279,34 +287,27 @@ export default function TradingPage() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-500/10 rounded-lg group-hover:bg-purple-500/20 transition-colors">
-                  <Building className="w-5 h-5 text-purple-500" />
+                  <FileText className="w-5 h-5 text-purple-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">Corporate Bonds</h3>
-                  <p className="text-sm text-muted-foreground">Corporate Debt Securities</p>
+                  <p className="text-sm text-muted-foreground">Corporate Debt Issues</p>
                 </div>
               </div>
               <Eye className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
             </div>
-            
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Active Issues</span>
-                <span className="text-sm font-medium text-foreground">{stats.activeBondIssues}</span>
+                <span className="font-semibold">{stats.activeBondIssues}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total Volume</span>
-                <span className="text-sm font-medium text-foreground">{formatCurrency(stats.totalBondVolume)}</span>
+                <span className="text-sm text-muted-foreground">Volume</span>
+                <span className="font-semibold">{formatCurrency(stats.totalBondVolume)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Average Yield</span>
-                <span className="text-sm font-medium text-foreground">{formatPercent(stats.averageBondYield)}</span>
-              </div>
-              <div className="pt-2 border-t border-border">
-                <div className="flex items-center text-sm text-primary">
-                  <span>Manage Bond Issues</span>
-                  <ArrowUpRight className="w-4 h-4 ml-1" />
-                </div>
+                <span className="text-sm text-muted-foreground">Avg Yield</span>
+                <span className="font-semibold">{stats.averageBondYield.toFixed(2)}%</span>
               </div>
             </div>
           </div>
@@ -317,50 +318,57 @@ export default function TradingPage() {
       <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-foreground">Recent Trading Activity</h2>
-          <Link href="/admin/trading/activity" className="text-sm text-primary hover:text-primary/80 transition-colors">
-            View All Activity
-          </Link>
+          <button className="text-sm text-primary hover:text-primary/80 transition-colors">
+            View All
+          </button>
         </div>
-        
         <div className="space-y-4">
-          {/* Activity items would be populated from API */}
           <div className="flex items-center justify-between py-3 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-500/10 rounded-lg">
                 <Shield className="w-4 h-4 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">91-Day T-Bill Auction</p>
-                <p className="text-xs text-muted-foreground">Opened 2 hours ago • GHS 500M target</p>
+                <p className="font-medium text-foreground">91-Day Treasury Bill Auction</p>
+                <p className="text-sm text-muted-foreground">2 hours ago</p>
               </div>
             </div>
-            <span className="text-sm text-green-500">Active</span>
+            <div className="text-right">
+              <p className="font-medium text-foreground">GHS 500M</p>
+              <p className="text-sm text-green-500">14.75% Yield</p>
+            </div>
           </div>
           
           <div className="flex items-center justify-between py-3 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <Activity className="w-4 h-4 text-green-500" />
+              <div className="p-2 bg-orange-500/10 rounded-lg">
+                <Activity className="w-4 h-4 text-orange-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">Repo Agreement #R2025-042</p>
-                <p className="text-xs text-muted-foreground">GHS 50M • 7-day term • 18.5% rate</p>
+                <p className="font-medium text-foreground">Repo Agreement - ABC Securities</p>
+                <p className="text-sm text-muted-foreground">4 hours ago</p>
               </div>
             </div>
-            <span className="text-sm text-blue-500">Executed</span>
+            <div className="text-right">
+              <p className="font-medium text-foreground">GHS 100M</p>
+              <p className="text-sm text-muted-foreground">7-Day Term</p>
+            </div>
           </div>
           
           <div className="flex items-center justify-between py-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-500/10 rounded-lg">
-                <Building className="w-4 h-4 text-purple-500" />
+                <FileText className="w-4 h-4 text-purple-500" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">GCB Corporate Bond Issue</p>
-                <p className="text-xs text-muted-foreground">Bookbuilding opens tomorrow • GHS 200M</p>
+                <p className="font-medium text-foreground">Corporate Bond Issue - Ghana Telecom</p>
+                <p className="text-sm text-muted-foreground">6 hours ago</p>
               </div>
             </div>
-            <span className="text-sm text-muted-foreground">Upcoming</span>
+            <div className="text-right">
+              <p className="font-medium text-foreground">GHS 200M</p>
+              <p className="text-sm text-muted-foreground">Bookbuilding</p>
+            </div>
           </div>
         </div>
       </div>

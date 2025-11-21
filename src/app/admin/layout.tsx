@@ -49,6 +49,8 @@ const navigation = [
       { name: 'Create Auction', href: '/admin/auctions/create' },
       { name: 'Results Entry', href: '/admin/auctions/results' },
       { name: 'All Auctions', href: '/admin/auctions' },
+      { name: 'Repo Operations', href: '/admin/auctions/repo' },
+      { name: 'Corporate Bonds', href: '/admin/auctions/corporate-bonds' },
     ],
   },
   {
@@ -103,9 +105,33 @@ const navigation = [
       { name: 'Configuration', href: '/admin/system/config' },
     ],
   },
+  {
+    name: 'Transactions',
+    href: '/admin/transactions',
+    icon: Activity,
+    roles: ['SUPER_ADMIN', 'ADMIN', 'COMPLIANCE_OFFICER'],
+  },
+  {
+    name: 'Primary Dealer',
+    href: '/primary-dealer',
+    icon: Database,
+    roles: ['SUPER_ADMIN', 'ADMIN', 'PRIMARY_DEALER'],
+  },
+  {
+    name: 'Book Runner',
+    href: '/book-runner',
+    icon: Users,
+    roles: ['SUPER_ADMIN', 'ADMIN', 'BOOK_RUNNER'],
+  },
+  {
+    name: 'Custodian',
+    href: '/custodian',
+    icon: Shield,
+    roles: ['SUPER_ADMIN', 'ADMIN', 'CUSTODIAN'],
+  },
 ];
 
-const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'DEVELOPER', 'ANALYST', 'PRIMARY_DEALER', 'COMPLIANCE_OFFICER'] as const;
+const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'DEVELOPER', 'ANALYST', 'PRIMARY_DEALER', 'BOOK_RUNNER', 'CUSTODIAN', 'COMPLIANCE_OFFICER'] as const;
 
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

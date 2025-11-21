@@ -26,7 +26,7 @@ import { PDFGenerator } from '@/lib/pdf-generator';
 interface PortfolioPosition {
   id: string;
   securityName: string;
-  securityType: 'TREASURY_BILL' | 'GOVERNMENT_BOND';
+  securityType: 'TREASURY_BILL' | 'GOVERNMENT_BOND' | 'CORPORATE_BOND';
   symbol: string;
   quantity: number;
   averagePrice: number;
@@ -40,6 +40,8 @@ interface PortfolioPosition {
   daysToMaturity?: number;
   couponRate?: number;
   accruedInterest?: number;
+  creditRating?: string;
+  issuer?: string;
   lastUpdate: string;
 }
 
@@ -145,69 +147,91 @@ export default function PortfolioPage() {
           costBasis: 5050000,
           yieldToMaturity: 24.2,
           couponRate: 23.5,
-          accruedInterest: 58333,
-          maturityDate: '2027-12-08',
-          daysToMaturity: 750,
+          maturityDate: '2026-11-20',
+          daysToMaturity: 365,
           lastUpdate: '2025-11-19T14:30:00Z',
         },
         {
           id: '4',
-          securityName: '3-Year Government Bond',
-          securityType: 'GOVERNMENT_BOND',
-          symbol: 'GHA-BD-003',
-          quantity: 30000,
-          averagePrice: 102.00,
-          currentPrice: 102.50,
-          marketValue: 3075000,
-          unrealizedPnL: 15000,
-          unrealizedPnLPercent: 0.49,
-          costBasis: 3060000,
-          yieldToMaturity: 25.1,
-          couponRate: 24.5,
-          accruedInterest: 36667,
-          maturityDate: '2028-12-08',
-          daysToMaturity: 1115,
+          securityName: 'Ghana Commercial Bank 5Y Bond',
+          securityType: 'CORPORATE_BOND',
+          symbol: 'GHA-CB-GCB',
+          quantity: 25000,
+          averagePrice: 99.50,
+          currentPrice: 99.85,
+          marketValue: 2496250,
+          unrealizedPnL: 8750,
+          unrealizedPnLPercent: 0.35,
+          costBasis: 2487500,
+          yieldToMaturity: 18.6,
+          couponRate: 18.5,
+          maturityDate: '2029-11-20',
+          daysToMaturity: 1460,
+          creditRating: 'A-',
+          issuer: 'Ghana Commercial Bank',
           lastUpdate: '2025-11-19T14:30:00Z',
         },
         {
           id: '5',
-          securityName: '5-Year Government Bond',
-          securityType: 'GOVERNMENT_BOND',
-          symbol: 'GHA-BD-005',
+          securityName: 'MTN Ghana 10Y Bond',
+          securityType: 'CORPORATE_BOND',
+          symbol: 'GHA-CB-MTN',
+          quantity: 15000,
+          averagePrice: 98.60,
+          currentPrice: 98.45,
+          marketValue: 1476750,
+          unrealizedPnL: -2250,
+          unrealizedPnLPercent: -0.15,
+          costBasis: 1479000,
+          yieldToMaturity: 20.8,
+          couponRate: 20.5,
+          maturityDate: '2034-06-30',
+          daysToMaturity: 3123,
+          creditRating: 'BBB',
+          issuer: 'MTN Ghana',
+          lastUpdate: '2025-11-19T14:30:00Z',
+        },
+        {
+          id: '6',
+          securityName: 'Ghana Cocoa Board 7Y Bond',
+          securityType: 'CORPORATE_BOND',
+          symbol: 'GHA-CB-COCOA',
           quantity: 20000,
-          averagePrice: 103.50,
-          currentPrice: 103.75,
-          marketValue: 2075000,
-          unrealizedPnL: 5000,
-          unrealizedPnLPercent: 0.24,
-          costBasis: 2070000,
-          yieldToMaturity: 26.0,
-          couponRate: 25.5,
-          accruedInterest: 25500,
-          maturityDate: '2030-12-08',
-          daysToMaturity: 1850,
+          averagePrice: 100.15,
+          currentPrice: 100.25,
+          marketValue: 2005000,
+          unrealizedPnL: 2000,
+          unrealizedPnLPercent: 0.10,
+          costBasis: 2003000,
+          yieldToMaturity: 18.9,
+          couponRate: 19.0,
+          maturityDate: '2031-12-15',
+          daysToMaturity: 2220,
+          creditRating: 'BBB+',
+          issuer: 'Ghana Cocoa Board',
           lastUpdate: '2025-11-19T14:30:00Z',
         },
       ];
 
       // Mock portfolio summary
       const mockSummary: PortfolioSummary = {
-        totalValue: 27400000,
-        totalCost: 27323750,
-        totalPnL: 76250,
-        totalPnLPercent: 0.28,
-        cashBalance: 2500000,
-        availableToTrade: 2000000,
-        totalYield: 24.8,
-        dayChange: 15000,
-        dayChangePercent: 0.05,
+        totalValue: 28225000,
+        totalCost: 28163250,
+        totalPnL: 61750,
+        totalPnLPercent: 0.22,
+        cashBalance: 5000000,
+        availableToTrade: 4500000,
+        totalYield: 20.8,
+        dayChange: 45500,
+        dayChangePercent: 0.16,
       };
 
       // Mock asset allocation
       const mockAllocation: AssetAllocation[] = [
-        { type: 'Treasury Bills', value: 17187500, percentage: 62.7, color: 'bg-blue-500' },
-        { type: 'Government Bonds', value: 10212500, percentage: 37.3, color: 'bg-green-500' },
-        { type: 'Cash', value: 2500000, percentage: 8.4, color: 'bg-purple-500' },
+        { type: 'Treasury Bills', value: 17187500, percentage: 60.9, color: '#10b981' },
+        { type: 'Government Bonds', value: 5062500, percentage: 17.9, color: '#3b82f6' },
+        { type: 'Corporate Bonds', value: 5975000, percentage: 21.2, color: '#f59e0b' },
+        { type: 'Cash', value: 5000000, percentage: 17.7, color: '#6b7280' },
       ];
 
       setPositions(mockPositions);
@@ -221,14 +245,14 @@ export default function PortfolioPage() {
   };
 
   const filteredPositions = positions
-    .filter(position => {
+    .filter((position: PortfolioPosition) => {
       const matchesSearch = !searchTerm || 
         position.securityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         position.symbol.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = !filterType || position.securityType === filterType;
       return matchesSearch && matchesType;
     })
-    .sort((a, b) => {
+    .sort((a: PortfolioPosition, b: PortfolioPosition) => {
       switch (sortBy) {
         case 'value':
           return b.marketValue - a.marketValue;

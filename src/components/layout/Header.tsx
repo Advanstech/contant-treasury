@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronDown, TrendingUp, Wallet, BarChart3, LogIn, User, LogOut, Menu, X, Settings, Shield, Bell, CreditCard, HelpCircle, FileText, Award, Activity, Zap, ArrowUpRight, Calendar } from 'lucide-react';
+import { ChevronDown, TrendingUp, Wallet, BarChart3, LogIn, User, LogOut, Menu, X, Settings, Shield, Bell, CreditCard, HelpCircle, FileText, Award, Activity, Zap, ArrowUpRight, Calendar, Building2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -149,6 +149,36 @@ export default function Header() {
                     <div className="flex-1">
                       <p className="font-medium">How Auction Works (Participating)</p>
                       <p className="text-xs text-muted-foreground">Learn Ghana auction process</p>
+                    </div>
+                  </Link>
+                </div>
+                
+                <div className="px-3 py-2 border-b border-border mb-3 mt-4">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Repo & Corporate Market</p>
+                </div>
+                <div className="space-y-1">
+                  <Link
+                    href="/auctions/repo"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-all hover:bg-accent hover:text-accent-foreground group/item"
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-indigo-500/10 flex items-center justify-center group-hover/item:bg-indigo-500/20 transition-colors">
+                      <TrendingUp className="h-4 w-4 text-indigo-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">Repo Operations</p>
+                      <p className="text-xs text-muted-foreground">Repurchase agreements & collateral</p>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/auctions/corporate-bonds"
+                    className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-all hover:bg-accent hover:text-accent-foreground group/item"
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-teal-500/10 flex items-center justify-center group-hover/item:bg-teal-500/20 transition-colors">
+                      <Building2 className="h-4 w-4 text-teal-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">Corporate Bonds</p>
+                      <p className="text-xs text-muted-foreground">Corporate debt securities & bookbuilding</p>
                     </div>
                   </Link>
                 </div>
@@ -627,7 +657,28 @@ export default function Header() {
               className="flex items-center gap-3 px-4 py-3 text-base font-medium text-foreground hover:bg-accent rounded-lg transition-colors"
             >
               <HelpCircle className="h-5 w-5" />
-              How Auction Works (Participating)
+              How Auction Works
+            </Link>
+            
+            {/* Mobile Repo & Corporate Section */}
+            <div className="border-t border-border pt-3 mt-3">
+              <p className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Repo & Corporate Market</p>
+            </div>
+            <Link 
+              href="/auctions/repo" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-foreground hover:bg-accent rounded-lg transition-colors"
+            >
+              <TrendingUp className="h-5 w-5" />
+              Repo Operations
+            </Link>
+            <Link 
+              href="/auctions/corporate-bonds" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-foreground hover:bg-accent rounded-lg transition-colors"
+            >
+              <Building2 className="h-5 w-5" />
+              Corporate Bonds
             </Link>
 
             {/* Mobile Trading Section - Only for authenticated users */}

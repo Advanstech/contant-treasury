@@ -15,6 +15,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
   isAuthenticated: boolean;
+  hasRole: (role: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -237,6 +238,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasRole = (role: string): boolean => {
+    if (!user) return false;
+    return user.role === role;
+  };
+
   const updateProfile = async (data: Partial<UserProfile>) => {
     const startTime = Date.now();
     
@@ -273,6 +279,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         updateProfile,
         isAuthenticated: !!user,
+        hasRole,
       }}
     >
       {children}

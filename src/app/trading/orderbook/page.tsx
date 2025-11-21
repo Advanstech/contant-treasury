@@ -113,6 +113,45 @@ export default function OrderBookPage() {
           ask: 101.27,
           spread: 0.04,
         },
+        'GHA-CB-GCB': {
+          symbol: 'GHA-CB-GCB',
+          name: 'Ghana Commercial Bank 5Y Bond',
+          lastPrice: 99.85,
+          change: 0.25,
+          changePercent: 0.25,
+          volume: 450000,
+          high: 100.10,
+          low: 99.60,
+          bid: 99.82,
+          ask: 99.88,
+          spread: 0.06,
+        },
+        'GHA-CB-MTN': {
+          symbol: 'GHA-CB-MTN',
+          name: 'MTN Ghana 10Y Bond',
+          lastPrice: 98.45,
+          change: -0.15,
+          changePercent: -0.15,
+          volume: 320000,
+          high: 98.60,
+          low: 98.30,
+          bid: 98.42,
+          ask: 98.48,
+          spread: 0.06,
+        },
+        'GHA-CB-COCOA': {
+          symbol: 'GHA-CB-COCOA',
+          name: 'Ghana Cocoa Board 7Y Bond',
+          lastPrice: 100.25,
+          change: 0.10,
+          changePercent: 0.10,
+          volume: 280000,
+          high: 100.35,
+          low: 100.15,
+          bid: 100.22,
+          ask: 100.28,
+          spread: 0.06,
+        },
       };
 
       // Mock order book data
@@ -123,8 +162,6 @@ export default function OrderBookPage() {
         { price: 98.71, quantity: 1000000, total: 987100000, orders: 25 },
         { price: 98.70, quantity: 450000, total: 444150000, orders: 15 },
         { price: 98.69, quantity: 600000, total: 592140000, orders: 20 },
-        { price: 98.68, quantity: 250000, total: 246700000, orders: 6 },
-        { price: 98.67, quantity: 800000, total: 789360000, orders: 22 },
       ];
 
       const mockSellOrders: OrderBookEntry[] = [
@@ -133,9 +170,6 @@ export default function OrderBookPage() {
         { price: 98.78, quantity: 350000, total: 345730000, orders: 9 },
         { price: 98.79, quantity: 900000, total: 889110000, orders: 24 },
         { price: 98.80, quantity: 550000, total: 543400000, orders: 14 },
-        { price: 98.81, quantity: 700000, total: 691670000, orders: 19 },
-        { price: 98.82, quantity: 200000, total: 197640000, orders: 5 },
-        { price: 98.83, quantity: 850000, total: 839855000, orders: 21 },
       ];
 
       // Mock recent trades
@@ -143,11 +177,8 @@ export default function OrderBookPage() {
         { id: '1', time: '14:32:15', price: 98.75, quantity: 100000, type: 'BUY' },
         { id: '2', time: '14:32:12', price: 98.74, quantity: 250000, type: 'SELL' },
         { id: '3', time: '14:32:08', price: 98.75, quantity: 50000, type: 'BUY' },
-        { id: '4', time: '14:32:05', price: 98.73, quantity: 150000, type: 'BUY' },
-        { id: '5', time: '14:32:01', price: 98.76, quantity: 200000, type: 'SELL' },
-        { id: '6', time: '14:31:58', price: 98.75, quantity: 300000, type: 'BUY' },
-        { id: '7', time: '14:31:54', price: 98.74, quantity: 100000, type: 'SELL' },
-        { id: '8', time: '14:31:51', price: 98.75, quantity: 75000, type: 'BUY' },
+        { id: '4', time: '14:32:05', price: 98.76, quantity: 150000, type: 'SELL' },
+        { id: '5', time: '14:32:01', price: 98.75, quantity: 75000, type: 'BUY' },
       ];
 
       setMarketData(mockMarketData);

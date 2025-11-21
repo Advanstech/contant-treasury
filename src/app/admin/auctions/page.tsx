@@ -15,6 +15,7 @@ import {
   Loader2,
   RefreshCw,
   FileText,
+  ChevronDown,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -183,57 +184,77 @@ export default function AuctionsListPage() {
 
       {/* Filters */}
       <div className="bg-[hsl(240,55%,10%)] border border-white/10 rounded-xl p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
-          <div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+          {/* Search - takes more space */}
+          <div className="lg:col-span-5">
             <label className="block text-sm font-medium text-gray-400 mb-2">
               Search
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by code or security..."
-                className="w-full pl-10 pr-4 py-2 bg-[hsl(240,60%,8%)] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-[hsl(25,95%,53%)]"
+                placeholder="Search by auction code or security name..."
+                className="w-full pl-10 pr-4 py-2.5 bg-[hsl(240,60%,8%)] border border-white/10 rounded-lg text-white text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[hsl(25,95%,53%)]/20 focus:border-[hsl(25,95%,53%)] transition-all duration-200"
               />
             </div>
           </div>
 
-          {/* Phase Filter */}
-          <div>
+          {/* Phase Filter - takes less space */}
+          <div className="lg:col-span-3">
             <label className="block text-sm font-medium text-gray-400 mb-2">
               Phase
             </label>
-            <select
-              value={phaseFilter}
-              onChange={(e) => setPhaseFilter(e.target.value)}
-              className="w-full px-4 py-2 bg-[hsl(240,60%,8%)] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-[hsl(25,95%,53%)]"
-            >
-              <option value="">All Phases</option>
-              <option value="ANNOUNCED">Announced</option>
-              <option value="BIDDING">Bidding</option>
-              <option value="CLOSED">Closed</option>
-              <option value="ALLOCATED">Allocated</option>
-              <option value="SETTLED">Settled</option>
-            </select>
+            <div className="relative">
+              <select
+                value={phaseFilter}
+                onChange={(e) => setPhaseFilter(e.target.value)}
+                className="w-full px-4 py-2.5 bg-[hsl(240,60%,8%)] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(25,95%,53%)]/20 focus:border-[hsl(25,95%,53%)] appearance-none cursor-pointer transition-all duration-200 pr-10"
+              >
+                <option value="">All Phases</option>
+                <option value="ANNOUNCED">Announced</option>
+                <option value="BIDDING">Bidding</option>
+                <option value="CLOSED">Closed</option>
+                <option value="ALLOCATED">Allocated</option>
+                <option value="SETTLED">Settled</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
           </div>
 
-          {/* Security Type Filter */}
-          <div>
+          {/* Security Type Filter - takes less space */}
+          <div className="lg:col-span-3">
             <label className="block text-sm font-medium text-gray-400 mb-2">
               Security Type
             </label>
-            <select
-              value={securityTypeFilter}
-              onChange={(e) => setSecurityTypeFilter(e.target.value)}
-              className="w-full px-4 py-2 bg-[hsl(240,60%,8%)] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-[hsl(25,95%,53%)]"
+            <div className="relative">
+              <select
+                value={securityTypeFilter}
+                onChange={(e) => setSecurityTypeFilter(e.target.value)}
+                className="w-full px-4 py-2.5 bg-[hsl(240,60%,8%)] border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(25,95%,53%)]/20 focus:border-[hsl(25,95%,53%)] appearance-none cursor-pointer transition-all duration-200 pr-10"
+              >
+                <option value="">All Types</option>
+                <option value="TREASURY_BILL">Treasury Bill</option>
+                <option value="BOND">Bond</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Clear Filters Button */}
+          <div className="lg:col-span-1">
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setPhaseFilter('');
+                setSecurityTypeFilter('');
+              }}
+              className="w-full px-4 py-2.5 bg-white/5 text-white rounded-lg text-sm font-medium hover:bg-white/10 transition-colors border border-white/10"
             >
-              <option value="">All Types</option>
-              <option value="TREASURY_BILL">Treasury Bill</option>
-              <option value="BOND">Bond</option>
-            </select>
+              Clear
+            </button>
           </div>
         </div>
       </div>
