@@ -1,26 +1,271 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Constant Capital Ghana Brand Colors - Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 240 60% 10%;
+    --primary: 25 95% 53%; /* Constant Capital Orange/Copper */
+    --primary-foreground: 0 0% 100%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 15% 45%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 60% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 60% 10%;
+    --secondary: 210 30% 96%;
+    --secondary-foreground: 240 60% 10%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 240 60% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 25 95% 53%;
+    --chart-1: 240 60% 50%; /* Navy Blue for charts */
+    --chart-2: 25 95% 53%; /* Orange */
+    --chart-3: 142 76% 45%; /* Green */
+    --chart-4: 280 65% 60%; /* Purple */
+    --chart-5: 15 85% 60%; /* Red-Orange */
+    --radius: 0.5rem;
+  }
+  
+  .dark {
+    /* Constant Capital Ghana Brand Colors - Dark Mode (Enhanced Visibility) */
+    --background: 240 60% 8%; /* Deep navy background matching Constant Capital */
+    --foreground: 0 0% 98%; /* Bright white for maximum readability */
+    --primary: 25 95% 53%; /* Constant Capital Orange */
+    --primary-foreground: 0 0% 100%;
+    --muted: 240 50% 16%; /* Slightly lighter for better card visibility */
+    --muted-foreground: 210 15% 75%; /* Brighter for better text readability */
+    --card: 240 55% 13%; /* Enhanced contrast from background */
+    --card-foreground: 0 0% 98%; /* Bright white for card text */
+    --popover: 240 55% 13%;
+    --popover-foreground: 0 0% 98%;
+    --secondary: 240 50% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 240 50% 22%; /* Brighter for better hover visibility */
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 76% 45%;
+    --success-foreground: 0 0% 98%;
+    --border: 240 40% 24%; /* More visible borders */
+    --input: 240 50% 20%; /* Better input field visibility */
+    --ring: 25 95% 53%;
+    --chart-1: 210 80% 60%; /* Bright blue */
+    --chart-2: 25 95% 53%; /* Orange */
+    --chart-3: 142 76% 50%; /* Green */
+    --chart-4: 280 70% 65%; /* Purple */
+    --chart-5: 15 85% 65%; /* Red-Orange */
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    @apply bg-background text-foreground transition-colors duration-300 ease-in-out;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  
+  * {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+}
+
+/* Enhanced animations for trading platform */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.6s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Loading shimmer effect */
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Staggered animations for lists */
+.animate-stagger-1 { animation-delay: 0.1s; }
+.animate-stagger-2 { animation-delay: 0.2s; }
+.animate-stagger-3 { animation-delay: 0.3s; }
+.animate-stagger-4 { animation-delay: 0.4s; }
+.animate-stagger-5 { animation-delay: 0.5s; }
+
+/* Page transition animations */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.2s ease-in, transform 0.2s ease-in;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.8);
+}
+
+:root {
+  --font-sans: var(--font-inter);
+}
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground !important;
+  }
+}
+
+/* Force dark mode text colors */
+.dark body {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark label {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .text-foreground {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .text-muted-foreground {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .text-primary {
+  color: hsl(var(--primary)) !important;
 }

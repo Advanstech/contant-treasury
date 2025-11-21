@@ -1,0 +1,111 @@
+{
+  "auctions": [
+    {
+      "id": "bog-2024-001",
+      "securityType": "T-BILL",
+      "tenorDays": 91,
+      "issueDate": "2024-01-08",
+      "maturityDate": "2024-04-08",
+      "biddingOpenDate": "2024-01-02T09:00:00Z",
+      "biddingCloseDate": "2024-01-05T16:00:00Z",
+      "settlementDate": "2024-01-08",
+      "targetAmount": 500000000,
+      "minBidAmount": 1000,
+      "maxBidAmount": 50000000,
+      "status": "CLOSED",
+      "results": {
+        "totalBids": 485000000,
+        "totalBidders": 127,
+        "averageYield": 28.5,
+        "marginRate": 28.2
+      }
+    },
+    {
+      "id": "bog-2024-002",
+      "securityType": "T-BILL",
+      "tenorDays": 182,
+      "issueDate": "2024-01-15",
+      "maturityDate": "2024-07-15",
+      "biddingOpenDate": "2024-01-09T09:00:00Z",
+      "biddingCloseDate": "2024-01-12T16:00:00Z",
+      "settlementDate": "2024-01-15",
+      "targetAmount": 750000000,
+      "minBidAmount": 2000,
+      "maxBidAmount": 75000000,
+      "status": "CLOSED",
+      "results": {
+        "totalBids": 723000000,
+        "totalBidders": 89,
+        "averageYield": 29.1,
+        "marginRate": 28.8
+      }
+    },
+    {
+      "id": "bog-2024-003",
+      "securityType": "GOVERNMENT BOND",
+      "tenorDays": 1095,
+      "issueDate": "2024-01-22",
+      "maturityDate": "2027-01-22",
+      "biddingOpenDate": "2024-01-16T09:00:00Z",
+      "biddingCloseDate": "2024-01-19T16:00:00Z",
+      "settlementDate": "2024-01-22",
+      "targetAmount": 1000000000,
+      "minBidAmount": 50000,
+      "maxBidAmount": 100000000,
+      "couponRate": 19.5,
+      "status": "CLOSED",
+      "results": {
+        "totalBids": 987000000,
+        "totalBidders": 45,
+        "averageYield": 19.8,
+        "marginRate": 19.5
+      }
+    },
+    {
+      "id": "bog-2024-004",
+      "securityType": "T-BILL",
+      "tenorDays": 91,
+      "issueDate": "2024-01-29",
+      "maturityDate": "2024-04-29",
+      "biddingOpenDate": "2024-01-23T09:00:00Z",
+      "biddingCloseDate": "2024-01-26T16:00:00Z",
+      "settlementDate": "2024-01-29",
+      "targetAmount": 600000000,
+      "minBidAmount": 1000,
+      "maxBidAmount": 60000000,
+      "status": "OPEN",
+      "results": null
+    },
+    {
+      "id": "bog-2024-005",
+      "securityType": "T-BILL",
+      "tenorDays": 364,
+      "issueDate": "2024-02-05",
+      "maturityDate": "2025-02-05",
+      "biddingOpenDate": "2024-01-30T09:00:00Z",
+      "biddingCloseDate": "2024-02-02T16:00:00Z",
+      "settlementDate": "2024-02-05",
+      "targetAmount": 800000000,
+      "minBidAmount": 5000,
+      "maxBidAmount": 80000000,
+      "status": "UPCOMING",
+      "results": null
+    },
+    {
+      "id": "bog-2024-006",
+      "securityType": "GOVERNMENT BOND",
+      "tenorDays": 1825,
+      "issueDate": "2024-02-12",
+      "maturityDate": "2029-02-12",
+      "biddingOpenDate": "2024-02-06T09:00:00Z",
+      "biddingCloseDate": "2024-02-09T16:00:00Z",
+      "settlementDate": "2024-02-12",
+      "targetAmount": 1500000000,
+      "minBidAmount": 100000,
+      "maxBidAmount": 150000000,
+      "couponRate": 21.0,
+      "status": "UPCOMING",
+      "results": null
+    }
+  ]
+}

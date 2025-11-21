@@ -1,0 +1,822 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  CheckCircle,
+  XCircle,
+  Eye,
+  FileText,
+  User,
+  Building,
+  AlertCircle,
+  Download,
+  Filter,
+  Loader2,
+  MessageSquare,
+  Edit2,
+  Save,
+  X,
+  Search,
+  Shield,
+  Clock,
+  TrendingUp,
+  Calendar,
+  Phone,
+  Mail,
+  MapPin,
+  Briefcase,
+  CreditCard,
+  Upload,
+  ArrowRight,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import adminApi from '@/lib/admin-api';
+import KYCCompletionPanel from '@/components/admin/kyc/KYCCompletionPanel';
+
+export default function KycApprovalsPage() {
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = useState('PENDING');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
+  const [requestInfoNotes, setRequestInfoNotes] = useState('');
+  const [showRequestInfoModal, setShowRequestInfoModal] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [editingData, setEditingData] = useState<any>({});
+  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
+  const [showCompleteKYCModal, setShowCompleteKYCModal] = useState<string | null>(null);
+  const [kycStep, setKycStep] = useState(1);
+
+  // Fetch KYC applications
+  const { data: applicationsData, isLoading } = useQuery({
+    queryKey: ['admin', 'kyc', filter],
+    queryFn: () => adminApi.kyc.getAll({ status: filter === 'ALL' ? undefined : filter }),
+  });
+
+  const kycApplications = applicationsData?.applications || [];
+
+  // Calculate KYC completion percentage
+  const calculateKYCProgress = (user: any) => {
+    if (!user) return 0;
+    
+    const requiredFields = [
+      'title', 'firstName', 'lastName', 'maritalStatus', 'dateOfBirth', 
+      'placeOfBirth', 'nationality', 'residentialStatus', 'mothersMaidenName',
+      'phone', 'email', 'address', 'city', 'ghanaCardNumber', 'tinNumber',
+      'occupation', 'employmentSector', 'annualIncome', 'sourceOfFunds',
+      'bankName', 'accountNumber', 'accountType'
+    ];
+    
+    const filledFields = requiredFields.filter(field => {
+      const value = user[field as keyof typeof user];
+      return value && value.toString().trim() !== '';
+    });
+    
+    return Math.round((filledFields.length / requiredFields.length) * 100);
+  };
+
+  // Get KYC status with color coding
+  const getKYCStatus = (user: any) => {
+    const progress = calculateKYCProgress(user);
+    
+    if (user?.isKycVerified) {
+      return { status: 'Verified', color: 'text-green-500', bgColor: 'bg-green-500/10', icon: CheckCircle };
+    } else if (progress === 100) {
+      return { status: 'Submitted', color: 'text-yellow-500', bgColor: 'bg-yellow-500/10', icon: Clock };
+    } else if (progress > 50) {
+      return { status: 'In Progress', color: 'text-blue-500', bgColor: 'bg-blue-500/10', icon: Shield };
+    } else {
+      return { status: 'Not Started', color: 'text-gray-500', bgColor: 'bg-gray-500/10', icon: AlertCircle };
+    }
+  };
+
+  // Toggle section expansion
+  const toggleSection = (userId: string, section: string) => {
+    const key = `${userId}-${section}`;
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key);
+    } else {
+      newExpanded.add(key);
+    }
+    setExpandedSections(newExpanded);
+  };
+
+  // Start editing user
+  const startEditing = (user: any) => {
+    setEditingUser(user.id);
+    setEditingData({ ...user });
+  };
+
+  // Save edited user
+  const saveUser = async () => {
+    try {
+      await adminApi.users.update(editingUser.id, editingData);
+      toast.success('User information updated successfully');
+      setEditingUser(null);
+      setEditingData({});
+      queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+    } catch (error: any) {
+      toast.error('Failed to update user', {
+        description: error.response?.data?.message || 'An error occurred',
+      });
+    }
+  };
+
+  // Filter applications
+  const filteredApplications = kycApplications.filter((app: any) => {
+    const matchesSearch = 
+      app.user?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      app.user?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      app.user?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      app.user?.ghanaCardNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesSearch;
+  });
+
+  // Approve KYC mutation
+  const approveMutation = useMutation({
+    mutationFn: (id: string) => adminApi.kyc.approve(id, 'KYC documents verified and approved'),
+    onSuccess: (data) => {
+      toast.success('KYC approved successfully!', {
+        description: `${data.user?.firstName} ${data.user?.lastName} can now trade.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+      setSelectedUser(null);
+    },
+    onError: (error: any) => {
+      toast.error('Failed to approve KYC', {
+        description: error.response?.data?.message || 'An error occurred',
+      });
+    },
+  });
+
+  const handleApprove = async (userId: string) => {
+    if (confirm('Are you sure you want to approve this KYC application?')) {
+      approveMutation.mutate(userId);
+    }
+  };
+
+  // Reject KYC mutation
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => adminApi.kyc.reject(id, notes),
+    onSuccess: (data) => {
+      toast.success('KYC rejected', {
+        description: 'User has been notified.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+      setShowRejectModal(null);
+      setRejectReason('');
+      setSelectedUser(null);
+    },
+    onError: (error: any) => {
+      toast.error('Failed to reject KYC', {
+        description: error.response?.data?.message || 'An error occurred',
+      });
+    },
+  });
+
+  const handleReject = async (userId: string) => {
+    if (!rejectReason.trim()) {
+      toast.error('Please provide a reason for rejection');
+      return;
+    }
+    rejectMutation.mutate({ id: userId, notes: rejectReason });
+  };
+
+  // Request more info mutation
+  const requestInfoMutation = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => adminApi.kyc.requestMoreInfo(id, notes),
+    onSuccess: (data) => {
+      toast.success('Information requested', {
+        description: 'User has been notified to provide additional information.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+      setShowRequestInfoModal(null);
+      setRequestInfoNotes('');
+      setSelectedUser(null);
+    },
+    onError: (error: any) => {
+      toast.error('Failed to request information', {
+        description: error.response?.data?.message || 'An error occurred',
+      });
+    },
+  });
+
+  const handleRequestMoreInfo = async (userId: string) => {
+    if (!requestInfoNotes.trim()) {
+      toast.error('Please specify what information is needed');
+      return;
+    }
+    requestInfoMutation.mutate({ id: userId, notes: requestInfoNotes });
+  };
+
+  const handleViewDocument = (url: string) => {
+    window.open(url, '_blank');
+  };
+
+  // Handle file upload for admin
+  const handleAdminFileUpload = async (file: File, userId: string, documentType: string) => {
+    const uploadKey = `${userId}-${documentType}`;
+    setUploadingFiles(prev => new Set(prev).add(uploadKey));
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', userId);
+      formData.append('documentType', documentType);
+      
+      const response = await adminApi.kyc.uploadDocument(userId, formData);
+      toast.success('Document uploaded successfully');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+    } catch (error: any) {
+      toast.error('Failed to upload document', {
+        description: error.response?.data?.message || 'An error occurred',
+      });
+    } finally {
+      setUploadingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(uploadKey);
+        return newSet;
+      });
+    }
+  };
+
+  // Complete KYC for user
+  const completeKYCMutation = useMutation({
+    mutationFn: ({ userId, kycData }: { userId: string; kycData: any }) => 
+      adminApi.kyc.completeKYC(userId, kycData),
+    onSuccess: (data) => {
+      toast.success('KYC completed successfully!', {
+        description: `All required information has been filled for the user.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+      setShowCompleteKYCModal(null);
+      setKycStep(1);
+    },
+    onError: (error: any) => {
+      toast.error('Failed to complete KYC', {
+        description: error.response?.data?.message || 'An error occurred',
+      });
+    },
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">KYC Management</h1>
+          <p className="text-muted-foreground mt-1">
+            Comprehensive KYC verification and user management
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="px-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="ALL">All</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-sm text-muted-foreground mb-1">Pending Review</p>
+          <p className="text-2xl font-bold text-foreground">
+            {filteredApplications.filter(a => a.status === 'PENDING').length}
+          </p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-sm text-muted-foreground mb-1">Under Review</p>
+          <p className="text-2xl font-bold text-foreground">
+            {kycApplications.filter(a => a.status === 'UNDER_REVIEW').length}
+          </p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-sm text-muted-foreground mb-1">Approved</p>
+          <p className="text-2xl font-bold text-foreground">
+            {kycApplications.filter(a => a.status === 'APPROVED').length}
+          </p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <p className="text-sm text-muted-foreground mb-1">Total Applications</p>
+          <p className="text-2xl font-bold text-foreground">{kycApplications.length}</p>
+        </div>
+      </div>
+
+      {/* Applications List */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="ml-3 text-muted-foreground">Loading applications...</span>
+        </div>
+      ) : kycApplications.length === 0 ? (
+        <div className="text-center py-12 bg-card border border-border rounded-xl">
+          <p className="text-muted-foreground">No KYC applications found</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredApplications.map((application) => {
+            const user = application.user;
+            const kycStatus = getKYCStatus(user);
+            const progress = calculateKYCProgress(user);
+            const isExpanded = selectedUser === application.id;
+            const isEditing = editingUser === user?.id;
+            
+            return (
+              <div
+                key={application.id}
+                className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <div className="p-6">
+                  {/* Header with Progress */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className={`h-12 w-12 rounded-lg ${kycStatus.bgColor} flex items-center justify-center flex-shrink-0`}>
+                        {(() => {
+                          const Icon = kycStatus.icon;
+                          return <Icon className={`h-6 w-6 ${kycStatus.color}`} />;
+                        })()}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            {user?.firstName} {user?.lastName}
+                          </h3>
+                          <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded text-xs font-medium">
+                            {user?.accountType || 'N/A'}
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${kycStatus.bgColor} ${kycStatus.color}`}>
+                            {kycStatus.status}
+                          </span>
+                        </div>
+                        
+                        {/* Progress Bar */}
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-muted-foreground">KYC Completion</span>
+                            <span className="text-xs font-semibold text-primary">{progress}%</span>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-1.5">
+                            <div 
+                              className="bg-primary h-1.5 rounded-full transition-all duration-500"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {user?.email}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            {user?.phone}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(application.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {isEditing ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={saveUser}
+                            className="px-3 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors flex items-center gap-1"
+                          >
+                            <Save className="h-4 w-4" />
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingUser(null)}
+                            className="px-3 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors flex items-center gap-1"
+                          >
+                            <X className="h-4 w-4" />
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => startEditing(user)}
+                            className="px-3 py-2 bg-muted text-foreground rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors flex items-center gap-1"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => setSelectedUser(isExpanded ? null : application.id)}
+                            className="px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-1"
+                          >
+                            <Eye className="h-4 w-4" />
+                            {isExpanded ? 'Hide' : 'Review'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+              {/* Expanded Details */}
+              {selectedUser === application.id && (
+                <div className="space-y-6 pt-6 border-t border-white/10">
+                  {/* Personal/Company Info */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-white mb-3">
+                      {application.user?.accountType === 'INDIVIDUAL'
+                        ? 'Personal Information'
+                        : 'Company Information'}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      {(application.user as any)?.ghanaCardNumber && (
+                        <div>
+                          <p className="text-muted-foreground mb-1">Ghana Card Number</p>
+                          <p className="text-foreground font-mono">{(application.user as any).ghanaCardNumber}</p>
+                        </div>
+                      )}
+                      {(application.user as any)?.registrationNumber && (
+                        <div>
+                          <p className="text-muted-foreground mb-1">Registration Number</p>
+                          <p className="text-foreground font-mono">
+                            {(application.user as any).registrationNumber}
+                          </p>
+                        </div>
+                      )}
+                      {(application.user as any)?.tinNumber && (
+                        <div>
+                          <p className="text-muted-foreground mb-1">TIN</p>
+                          <p className="text-foreground font-mono">{(application.user as any).tinNumber}</p>
+                        </div>
+                      )}
+                      {(application.user as any)?.dateOfBirth && (
+                        <div>
+                          <p className="text-muted-foreground mb-1">Date of Birth</p>
+                          <p className="text-foreground">{(application.user as any).dateOfBirth}</p>
+                        </div>
+                      )}
+                      {(application.user as any)?.address && (
+                        <div className="md:col-span-2">
+                          <p className="text-muted-foreground mb-1">Address</p>
+                          <p className="text-foreground">{(application.user as any).address}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Inline KYC Completion */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-semibold text-foreground">Complete KYC Information</h4>
+                      <button
+                        onClick={() => setShowCompleteKYCModal(user?.id)}
+                        className="px-3 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-1"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        Complete KYC
+                      </button>
+                    </div>
+                    
+                    {/* KYC Progress Overview */}
+                    <div className="grid grid-cols-8 gap-2">
+                      {[
+                        { id: 1, name: 'Personal', icon: User },
+                        { id: 2, name: 'Contact', icon: MapPin },
+                        { id: 3, name: 'ID', icon: Shield },
+                        { id: 4, name: 'Tax', icon: FileText },
+                        { id: 5, name: 'Employment', icon: Briefcase },
+                        { id: 6, name: 'Financial', icon: DollarSign },
+                        { id: 7, name: 'Bank', icon: CreditCard },
+                        { id: 8, name: 'CSD', icon: Building },
+                      ].map((step) => {
+                        const Icon = step.icon;
+                        const isCompleted = user && [
+                          'firstName', 'lastName', 'dateOfBirth', // Personal
+                          'phone', 'email', 'address', // Contact
+                          'ghanaCardNumber', // ID
+                          'tinNumber', // Tax
+                          'occupation', 'employmentSector', // Employment
+                          'annualIncome', 'sourceOfFunds', // Financial
+                          'bankName', 'accountNumber', // Bank
+                          'csdAccountNumber' // CSD
+                        ].some(field => user[field]);
+                        
+                        return (
+                          <div
+                            key={step.id}
+                            className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                              isCompleted ? 'bg-green-500 text-white' : 'bg-muted text-muted-foreground'
+                            }`}
+                            title={step.name}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Documents with Admin Upload */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-semibold text-foreground">
+                        Documents Management
+                      </h4>
+                      <button
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*,.pdf';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) handleAdminFileUpload(file, user?.id, 'ADDITIONAL_DOCUMENT');
+                          };
+                          input.click();
+                        }}
+                        className="px-3 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors flex items-center gap-1"
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload Document
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {application.documents.map((doc: any, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-muted border border-border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm text-foreground">{doc.documentType || doc.type}</p>
+                              <p
+                                className={`text-xs ${
+                                  doc.status === 'VERIFIED'
+                                    ? 'text-green-500'
+                                    : 'text-yellow-500'
+                                }`}
+                              >
+                                {doc.status}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleViewDocument(doc.fileUrl || doc.url || '#')}
+                              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                            >
+                              <Eye className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm('Delete this document?')) {
+                                  // Handle document deletion
+                                  toast.success('Document deleted');
+                                }
+                              }}
+                              className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                            >
+                              <X className="w-4 h-4 text-red-500" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Missing Documents Upload Placeholders */}
+                      {['Ghana Card Front', 'Ghana Card Back', 'TIN Certificate', 'Proof of Address'].filter(
+                        docType => !application.documents.some((doc: any) => 
+                          (doc.documentType || doc.type) === docType
+                        )
+                      ).map((docType) => (
+                        <div
+                          key={docType}
+                          className="flex items-center justify-between p-3 bg-muted/30 border-2 border-dashed border-border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Upload className="w-5 h-5 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm text-muted-foreground">{docType}</p>
+                              <p className="text-xs text-red-500">Missing</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*,.pdf';
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) handleAdminFileUpload(file, user?.id, docType);
+                              };
+                              input.click();
+                            }}
+                            disabled={uploadingFiles.has(`${user?.id}-${docType}`)}
+                            className="px-3 py-1 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          >
+                            {uploadingFiles.has(`${user?.id}-${docType}`) ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              'Upload'
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  {application.status === 'PENDING' || application.status === 'UNDER_REVIEW' ? (
+                    <div className="flex items-center gap-3 pt-4 border-t border-border">
+                      <button
+                        onClick={() => handleApprove(application.id)}
+                        disabled={approveMutation.isPending}
+                        className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {approveMutation.isPending ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-5 h-5" />
+                        )}
+                        Approve KYC
+                      </button>
+                      <button
+                        onClick={() => setShowRejectModal(application.id)}
+                        disabled={rejectMutation.isPending}
+                        className="flex-1 px-6 py-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-lg font-medium hover:bg-destructive/20 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <XCircle className="w-5 h-5" />
+                        Reject
+                      </button>
+                      <button 
+                        onClick={() => setShowRequestInfoModal(application.id)}
+                        disabled={requestInfoMutation.isPending}
+                        className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        Request More Info
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="pt-4 border-t border-border">
+                      <p className="text-sm text-muted-foreground text-center">
+                        This application has been {application.status.toLowerCase().replace('_', ' ')}
+                        {application.reviewedAt && ` on ${new Date(application.reviewedAt).toLocaleString()}`}
+                      </p>
+                      {application.reviewNotes && (
+                        <p className="text-sm text-muted-foreground text-center mt-2">
+                          Notes: {application.reviewNotes}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          ))}
+        </div>
+      )}
+
+      {/* KYC Completion Slide-over Panel */}
+      {showCompleteKYCModal && (
+        <KYCCompletionPanel
+          userId={showCompleteKYCModal}
+          userData={kycApplications.find(app => app.user?.id === showCompleteKYCModal)?.user}
+          onClose={() => setShowCompleteKYCModal(null)}
+          onComplete={() => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+            setShowCompleteKYCModal(null);
+          }}
+        />
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-foreground mb-4">Reject KYC Application</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Please provide a reason for rejecting this application. The user will be notified.
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              rows={4}
+              className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleReject(showRejectModal)}
+                disabled={rejectMutation.isPending}
+                className="flex-1 px-4 py-2 bg-destructive text-white rounded-lg font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50"
+              >
+                {rejectMutation.isPending ? 'Rejecting...' : 'Confirm Reject'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowRejectModal(null);
+                  setRejectReason('');
+                }}
+                className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Info Modal */}
+      {showRequestInfoModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-foreground mb-4">Request Additional Information</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Specify what additional information or documents are needed from the user.
+            </p>
+            <textarea
+              value={requestInfoNotes}
+              onChange={(e) => setRequestInfoNotes(e.target.value)}
+              placeholder="Enter what information is needed..."
+              rows={4}
+              className="w-full px-4 py-2 bg-muted border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleRequestMoreInfo(showRequestInfoModal)}
+                disabled={requestInfoMutation.isPending}
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {requestInfoMutation.isPending ? 'Sending...' : 'Send Request'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowRequestInfoModal(null);
+                  setRequestInfoNotes('');
+                }}
+                className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Compliance Notice */}
+      <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex gap-3">
+        <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-blue-500 mb-1">
+            KYC Compliance Requirements
+          </p>
+          <p className="text-sm text-muted-foreground">
+            All approvals must comply with Ghana SEC KYC/AML regulations. Ensure all
+            documents are verified and investor information is complete before approval.
+          </p>
+        </div>
+      </div>
+    </div>
+
+      {/* KYC Completion Slide-over Panel */}
+      {showCompleteKYCModal && (
+        <KYCCompletionPanel
+          userId={showCompleteKYCModal}
+          userData={kycApplications.find(app => app.user?.id === showCompleteKYCModal)?.user}
+          onClose={() => setShowCompleteKYCModal(null)}
+          onComplete={() => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+            setShowCompleteKYCModal(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}

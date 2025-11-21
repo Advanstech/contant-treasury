@@ -1,0 +1,49 @@
+{
+  "announcements": [
+    {
+      "id": "bog-ann-2024-001",
+      "title": "91-Day Treasury Bill Auction - January 2024",
+      "category": "AUCTION_NOTICE",
+      "publishDate": "2024-01-02T08:30:00Z",
+      "summary": "Bank of Ghana announces 91-day Treasury Bill auction with target amount of GHS 500 million",
+      "content": "The Bank of Ghana invites bids for 91-day Treasury Bills with a target amount of GHS 500 million. Bidding opens on January 2, 2024 at 9:00 AM and closes on January 5, 2024 at 4:00 PM. Settlement will occur on January 8, 2024.",
+      "attachmentUrl": "https://www.bog.gov.gh/wp-content/uploads/2024/01/T-Bill-91-Day-Jan-2024.pdf"
+    },
+    {
+      "id": "bog-ann-2024-002",
+      "title": "182-Day Treasury Bill Auction Results",
+      "category": "AUCTION_RESULTS",
+      "publishDate": "2024-01-15T17:00:00Z",
+      "summary": "Results for 182-day Treasury Bill auction - Total bids received: GHS 723 million",
+      "content": "The Bank of Ghana announces results for the 182-day Treasury Bill auction conducted on January 12, 2024. Total bids received amounted to GHS 723 million from 89 bidders. The average yield was 29.1% with a margin rate of 28.8%.",
+      "attachmentUrl": "https://www.bog.gov.gh/wp-content/uploads/2024/01/T-Bill-182-Day-Results-Jan-2024.pdf"
+    },
+    {
+      "id": "bog-ann-2024-003",
+      "title": "3-Year Government Bond Auction",
+      "category": "AUCTION_NOTICE",
+      "publishDate": "2024-01-16T09:00:00Z",
+      "summary": "3-Year Government Bond with coupon rate of 19.5% - Target amount GHS 1 billion",
+      "content": "The Bank of Ghana announces a 3-Year Government Bond auction with a coupon rate of 19.5% per annum. The target amount is GHS 1 billion. Bidding closes on January 19, 2024 at 4:00 PM. Settlement date is January 22, 2024.",
+      "attachmentUrl": "https://www.bog.gov.gh/wp-content/uploads/2024/01/Gov-Bond-3Y-Jan-2024.pdf"
+    },
+    {
+      "id": "bog-ann-2024-004",
+      "title": "Monetary Policy Committee Decision - January 2024",
+      "category": "POLICY",
+      "publishDate": "2024-01-18T14:30:00Z",
+      "summary": "MPC maintains policy rate at 30.0% - Inflation outlook stable",
+      "content": "The Monetary Policy Committee has decided to maintain the policy rate at 30.0%. The Committee noted that inflation pressures have eased and expects inflation to remain within the target band of 8±2 percent over the medium term.",
+      "attachmentUrl": "https://www.bog.gov.gh/wp-content/uploads/2024/01/MPC-Press-Release-Jan-2024.pdf"
+    },
+    {
+      "id": "bog-ann-2024-005",
+      "title": "91-Day Treasury Bill Auction - Upcoming",
+      "category": "AUCTION_NOTICE",
+      "publishDate": "2024-01-23T08:30:00Z",
+      "summary": "Upcoming 91-day Treasury Bill auction - Target amount GHS 600 million",
+      "content": "The Bank of Ghana invites bids for 91-day Treasury Bills with a target amount of GHS 600 million. Bidding opens on January 23, 2024 at 9:00 AM and closes on January 26, 2024 at 4:00 PM. Settlement will occur on January 29, 2024.",
+      "attachmentUrl": "https://www.bog.gov.gh/wp-content/uploads/2024/01/T-Bill-91-Day-Feb-2024.pdf"
+    }
+  ]
+}
