@@ -127,6 +127,18 @@ export const adminUsersApi = {
     return response.data;
   },
 
+  // Update user activation status
+  updateActivation: async (id: string, isActive: boolean): Promise<AdminUser> => {
+    const response = await apiClient.patch(`/api/v1/admin/users/${id}/activation`, { isActive });
+    return response.data;
+  },
+
+  // Assign user role
+  assignRole: async (id: string, role: string): Promise<AdminUser> => {
+    const response = await apiClient.patch(`/api/v1/admin/users/${id}/role`, { role });
+    return response.data;
+  },
+
   // Get user activity log
   getActivity: async (id: string, params?: { page?: number; limit?: number }): Promise<{ activities: any[]; total: number }> => {
     const response = await apiClient.get(`/api/v1/admin/users/${id}/activity`, { params });

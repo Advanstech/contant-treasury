@@ -49,8 +49,8 @@ export default function AuctionsListPage() {
   // Filter auctions by search query
   const filteredAuctions = auctions.filter(
     (auction) =>
-      auction.auctionCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      auction.securityName.toLowerCase().includes(searchQuery.toLowerCase())
+      (auction.auctionCode?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+      (auction.securityName?.toLowerCase().includes(searchQuery.toLowerCase()) || false)
   );
 
   // Delete mutation

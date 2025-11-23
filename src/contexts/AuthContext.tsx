@@ -1,24 +1,19 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { authApi, UserProfile, RegisterDto, LoginDto } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import logger from '@/lib/logger';
+import { AuthContext, AuthContextType } from './auth-context';
 
-interface AuthContextType {
-  user: UserProfile | null;
-  token: string | null;
-  loading: boolean;
-  login: (data: LoginDto) => Promise<void>;
-  register: (data: RegisterDto) => Promise<void>;
-  logout: () => Promise<void>;
-  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
-  isAuthenticated: boolean;
-  hasRole: (role: string) => boolean;
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -187,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Show the success message from the backend
       toast.success(message || 'Account created successfully!');
-      router.push('/dashboard');
+      router?.push('/dashboard');
     } catch (error: any) {
       logger.auth('Registration failed', {
         email: data.email,
@@ -234,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userId');
       toast.success('Logged out successfully');
-      router.push('/login');
+      router?.push('/login');
     }
   };
 
@@ -285,12 +280,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

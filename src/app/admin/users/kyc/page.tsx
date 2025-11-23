@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   CheckCircle,
   XCircle,
@@ -29,17 +29,21 @@ import {
   Upload,
   ArrowRight,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Power
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import adminApi from '@/lib/admin-api';
 import KYCCompletionPanel from '@/components/admin/kyc/KYCCompletionPanel';
+import { Pagination } from '@/components/ui/pagination';
 
 export default function KycApprovalsPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState('PENDING');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
@@ -51,6 +55,9 @@ export default function KycApprovalsPage() {
   const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
   const [showCompleteKYCModal, setShowCompleteKYCModal] = useState<string | null>(null);
   const [kycStep, setKycStep] = useState(1);
+  const [showRoleModal, setShowRoleModal] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [showActivationModal, setShowActivationModal] = useState<{userId: string, currentStatus: boolean} | null>(null);
 
   // Fetch KYC applications
   const { data: applicationsData, isLoading } = useQuery({
@@ -98,6 +105,17 @@ export default function KycApprovalsPage() {
     
     return matchesSearch;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedApplications = filteredApplications.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery]);
 
   // Mutations
   const approveMutation = useMutation({
@@ -219,6 +237,65 @@ export default function KycApprovalsPage() {
     },
   });
 
+  // User activation mutation
+  const toggleUserActivationMutation = useMutation({
+    mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) => 
+      adminApi.users.updateActivation(userId, isActive),
+    onSuccess: (data) => {
+      toast.success('User activation status updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+    },
+    onError: (error: any) => {
+      toast.error('Failed to update user activation', {
+        description: error.response?.data?.message || 'An error occurred',
+      });
+    },
+  });
+
+  // Role assignment mutation
+  const assignRoleMutation = useMutation({
+    mutationFn: ({ userId, role }: { userId: string; role: string }) => 
+      adminApi.users.assignRole(userId, role),
+    onSuccess: (data) => {
+      toast.success('User role assigned successfully!');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'kyc'] });
+      setShowRoleModal(null);
+      setSelectedRole('');
+    },
+    onError: (error: any) => {
+      toast.error('Failed to assign role', {
+        description: error.response?.data?.message || 'An error occurred',
+      });
+    },
+  });
+
+  // Handler functions
+  const handleToggleActivation = (userId: string, currentStatus: boolean) => {
+    setShowActivationModal({ userId, currentStatus });
+  };
+
+  const confirmToggleActivation = () => {
+    if (showActivationModal) {
+      toggleUserActivationMutation.mutate({ 
+        userId: showActivationModal.userId, 
+        isActive: !showActivationModal.currentStatus 
+      });
+      setShowActivationModal(null);
+    }
+  };
+
+  const handleRoleAssignment = (userId: string) => {
+    assignRoleMutation.mutate({ 
+      userId, 
+      role: selectedRole 
+    });
+  };
+
+  const openRoleModal = (userId: string, currentRole: string) => {
+    setSelectedRole(currentRole);
+    setShowRoleModal(userId);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -295,7 +372,7 @@ export default function KycApprovalsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredApplications.map((application: any) => {
+          {paginatedApplications.map((application: any) => {
             const user = application.user;
             const kycStatus = getKYCStatus(user);
             const progress = calculateKYCProgress(user);
@@ -535,12 +612,73 @@ export default function KycApprovalsPage() {
                           )}
                         </div>
                       )}
+
+                      {/* Admin Actions - User Management */}
+                      <div className="pt-4 border-t border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-sm font-medium text-foreground">Admin Actions</h4>
+                          <Shield className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {/* User Activation Toggle */}
+                          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <Power className="w-4 h-4 text-muted-foreground" />
+                              <div>
+                                <span className="text-sm font-medium text-foreground">
+                                  User Status
+                                </span>
+                                <div className="text-xs text-muted-foreground">
+                                  {user?.isActive ? 'Active' : 'Inactive'}
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleToggleActivation(user?.id, user?.isActive)}
+                              disabled={toggleUserActivationMutation.isPending}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                user?.isActive ? 'bg-green-600' : 'bg-red-600'
+                              } disabled:opacity-50`}
+                            >
+                              <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                  user?.isActive ? 'translate-x-6' : 'translate-x-1'
+                                }`}
+                              />
+                            </button>
+                          </div>
+
+                          {/* Role Assignment */}
+                          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm font-medium text-foreground">
+                                Role
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => openRoleModal(user?.id, user?.role)}
+                              className="px-3 py-1 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-primary/90 transition-colors"
+                            >
+                              {user?.role || 'RETAIL'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             );
           })}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            totalItems={filteredApplications.length}
+            itemsPerPage={itemsPerPage}
+            className="mt-6"
+          />
         </div>
       )}
 
@@ -629,6 +767,118 @@ export default function KycApprovalsPage() {
             setShowCompleteKYCModal(null);
           }}
         />
+      )}
+
+      {/* Role Assignment Modal */}
+      {showRoleModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-foreground mb-4">Assign User Role</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Select the appropriate role for this user. This will determine their access level and permissions.
+            </p>
+            
+            <div className="space-y-3 mb-6">
+              {[
+                { value: 'RETAIL', label: 'Retail Investor', description: 'Individual investor access' },
+                { value: 'INSTITUTIONAL', label: 'Institutional', description: 'Institutional investor access' },
+                { value: 'PRIMARY_DEALER', label: 'Primary Dealer', description: 'BoG authorized dealer' },
+                { value: 'ADMIN', label: 'Administrator', description: 'Full admin access' },
+                { value: 'SUPER_ADMIN', label: 'Super Admin', description: 'System administrator' },
+              ].map((role) => (
+                <label
+                  key={role.value}
+                  className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedRole === role.value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={role.value}
+                    checked={selectedRole === role.value}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    className="sr-only"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-foreground">{role.label}</div>
+                    <div className="text-sm text-muted-foreground">{role.description}</div>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                    selectedRole === role.value
+                      ? 'border-primary bg-primary'
+                      : 'border-muted-foreground'
+                  }`}>
+                    {selectedRole === role.value && (
+                      <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleRoleAssignment(showRoleModal)}
+                disabled={assignRoleMutation.isPending || !selectedRole}
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {assignRoleMutation.isPending ? 'Assigning...' : 'Assign Role'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowRoleModal(null);
+                  setSelectedRole('');
+                }}
+                className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Activation Confirmation Modal */}
+      {showActivationModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-foreground mb-4">
+              {showActivationModal.currentStatus ? 'Deactivate User' : 'Activate User'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {showActivationModal.currentStatus 
+                ? 'Are you sure you want to deactivate this user? They will no longer be able to access their account.'
+                : 'Are you sure you want to activate this user? They will regain full access to their account.'
+              }
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={confirmToggleActivation}
+                disabled={toggleUserActivationMutation.isPending}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${
+                  showActivationModal.currentStatus
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {toggleUserActivationMutation.isPending 
+                  ? (showActivationModal.currentStatus ? 'Deactivating...' : 'Activating...')
+                  : (showActivationModal.currentStatus ? 'Deactivate User' : 'Activate User')
+                }
+              </button>
+              <button
+                onClick={() => setShowActivationModal(null)}
+                className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Compliance Notice */}

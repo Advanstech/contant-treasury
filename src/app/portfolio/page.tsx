@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   TrendingUp,
   TrendingDown,
@@ -24,12 +25,17 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { AnimatedCard, AnimatedButton } from '@/components/ui/animated-card';
+import { Pagination } from '@/components/ui/pagination';
 
 export default function PortfolioPage() {
   const { token } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'TREASURY_BILL' | 'TREASURY_BOND' | 'CORPORATE_BOND'>('all');
   const [sortBy, setSortBy] = useState<'marketValue' | 'yield' | 'maturity' | 'pnl'>('marketValue');
+  const [selectedHolding, setSelectedHolding] = useState<any>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Mock portfolio data that would come from BoG backend APIs
   const mockHoldings = [
@@ -143,6 +149,17 @@ export default function PortfolioPage() {
     }
   });
 
+  // Pagination logic
+  const totalPages = filteredHoldings ? Math.ceil(filteredHoldings.length / itemsPerPage) : 0;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedHoldings = filteredHoldings?.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterType, sortBy]);
+
   // Calculate portfolio statistics
   const stats = filteredHoldings?.reduce(
     (acc, holding) => {
@@ -187,39 +204,72 @@ export default function PortfolioPage() {
     ? ((stats.totalPnL / stats.totalCostBasis) * 100) 
     : 0;
 
+  const handleViewDetails = (holding: any) => {
+    setSelectedHolding(holding);
+    setShowDetails(true);
+  };
+
+  const handleCloseDetails = () => {
+    setShowDetails(false);
+    setSelectedHolding(null);
+  };
+
   const handleExport = () => {
-    if (!filteredHoldings || filteredHoldings.length === 0) return;
-
-    const headers = [
-      'Security Name', 'ISIN', 'Type', 'Quantity', 'Avg Price', 
-      'Current Price', 'Market Value', 'Cost Basis', 'P&L', 'P&L %',
-      'Yield %', 'Days to Maturity', 'Maturity Date', 'Bid Reference'
-    ];
+    console.log('Export triggered');
+    console.log('Token:', !!token);
+    console.log('Holdings data:', holdings);
+    console.log('Filtered holdings:', filteredHoldings);
     
-    const rows = filteredHoldings.map(holding => [
-      holding.security.name,
-      holding.security.isin,
-      holding.security.type,
-      holding.quantity.toLocaleString(),
-      `₵${holding.averagePrice.toFixed(2)}`,
-      `₵${holding.currentPrice.toFixed(2)}`,
-      `₵${holding.marketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      `₵${holding.costBasis.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      `₵${holding.unrealizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      `${holding.unrealizedPnLPercent.toFixed(2)}%`,
-      `${holding.yieldToMaturity.toFixed(2)}%`,
-      holding.daysToMaturity,
-      new Date(holding.security.maturityDate).toLocaleDateString(),
-      holding.bidReference,
-    ]);
+    if (!filteredHoldings || filteredHoldings.length === 0) {
+      console.log('No data to export - filteredHoldings is empty');
+      toast.error('No data available to export');
+      return;
+    }
 
-    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `portfolio-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+    try {
+      const headers = [
+        'Security Name', 'ISIN', 'Type', 'Quantity', 'Avg Price', 
+        'Current Price', 'Market Value', 'Cost Basis', 'P&L', 'P&L %',
+        'Yield %', 'Days to Maturity', 'Maturity Date', 'Bid Reference'
+      ];
+      
+      const rows = filteredHoldings.map(holding => [
+        `"${holding.security.name}"`, // Escape text fields
+        `"${holding.security.isin}"`,
+        `"${holding.security.type}"`,
+        holding.quantity, // Raw number for Excel
+        holding.averagePrice, // Raw number for Excel
+        holding.currentPrice, // Raw number for Excel
+        holding.marketValue, // Raw number for Excel
+        holding.costBasis, // Raw number for Excel
+        holding.unrealizedPnL, // Raw number for Excel
+        holding.unrealizedPnLPercent, // Raw number for Excel
+        holding.yieldToMaturity, // Raw number for Excel
+        holding.daysToMaturity,
+        `"${new Date(holding.security.maturityDate).toLocaleDateString()}"`,
+        `"${holding.bidReference}"`,
+      ]);
+
+      // Add BOM for proper UTF-8 encoding in Excel
+      const BOM = '\uFEFF';
+      const csv = BOM + [headers, ...rows].map(row => row.join(',')).join('\n');
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `portfolio-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      console.log('Export completed successfully');
+      toast.success('Portfolio statement exported successfully');
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export portfolio statement');
+    }
   };
 
   const getSecurityTypeColor = (type: string) => {
@@ -400,7 +450,7 @@ export default function PortfolioPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredHoldings.map((holding: any) => {
+                  {paginatedHoldings?.map((holding: any) => {
                     const maturityStatus = getMaturityStatus(holding.daysToMaturity);
                     return (
                       <tr key={holding.id} className="hover:bg-muted/30 transition-colors">
@@ -458,7 +508,11 @@ export default function PortfolioPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <AnimatedButton variant="outline">
+                          <AnimatedButton 
+                            variant="outline" 
+                            onClick={() => handleViewDetails(holding)}
+                            className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                          >
                             <Eye className="h-3 w-3 mr-1" />
                             Details
                           </AnimatedButton>
@@ -469,6 +523,13 @@ export default function PortfolioPage() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredHoldings?.length || 0}
+              itemsPerPage={itemsPerPage}
+            />
           </AnimatedCard>
         ) : (
           <AnimatedCard className="p-12 text-center border border-border">
@@ -488,6 +549,156 @@ export default function PortfolioPage() {
           </AnimatedCard>
         )}
       </div>
+
+      {/* Details Modal */}
+      {showDetails && selectedHolding && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <AnimatedCard className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">Holding Details</h2>
+                <button
+                  onClick={handleCloseDetails}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Security Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Security Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Name:</span>
+                      <span className="font-medium">{selectedHolding.security.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">ISIN:</span>
+                      <span className="font-medium">{selectedHolding.security.isin}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Type:</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSecurityTypeColor(selectedHolding.security.type)}`}>
+                        {selectedHolding.security.type.replace('_', ' ')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Maturity Date:</span>
+                      <span className="font-medium">{new Date(selectedHolding.security.maturityDate).toLocaleDateString()}</span>
+                    </div>
+                    {selectedHolding.security.couponRate && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Coupon Rate:</span>
+                        <span className="font-medium">{selectedHolding.security.couponRate}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Investment Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Investment Details</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Quantity:</span>
+                      <span className="font-medium">{selectedHolding.quantity.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Average Price:</span>
+                      <span className="font-medium">₵{selectedHolding.averagePrice.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Current Price:</span>
+                      <span className="font-medium">₵{selectedHolding.currentPrice.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Market Value:</span>
+                      <span className="font-bold text-lg">₵{selectedHolding.marketValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Cost Basis:</span>
+                      <span className="font-medium">₵{selectedHolding.costBasis.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Performance Metrics */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Performance</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Unrealized P&L:</span>
+                      <span className={`font-bold ${selectedHolding.unrealizedPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ₵{selectedHolding.unrealizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">P&L %:</span>
+                      <span className={`font-bold ${selectedHolding.unrealizedPnLPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {selectedHolding.unrealizedPnLPercent >= 0 ? '+' : ''}{selectedHolding.unrealizedPnLPercent.toFixed(2)}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Yield to Maturity:</span>
+                      <span className="font-medium">{selectedHolding.yieldToMaturity.toFixed(2)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Days to Maturity:</span>
+                      <span className="font-medium">{selectedHolding.daysToMaturity} days</span>
+                    </div>
+                    {selectedHolding.accruedInterest > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Accrued Interest:</span>
+                        <span className="font-medium">₵{selectedHolding.accruedInterest.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Transaction Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Transaction Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Purchase Date:</span>
+                      <span className="font-medium">{new Date(selectedHolding.purchaseDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Settlement Date:</span>
+                      <span className="font-medium">{new Date(selectedHolding.settlementDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Bid Reference:</span>
+                      <span className="font-medium text-xs">{selectedHolding.bidReference}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Auction ID:</span>
+                      <span className="font-medium text-xs">{selectedHolding.auctionId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className="font-medium capitalize">{selectedHolding.status}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-border">
+                <div className="flex justify-end gap-3">
+                  <AnimatedButton variant="outline" onClick={handleCloseDetails}>
+                    Close
+                  </AnimatedButton>
+                  <AnimatedButton className="bg-primary text-primary-foreground">
+                    Download Statement
+                  </AnimatedButton>
+                </div>
+              </div>
+            </div>
+          </AnimatedCard>
+        </div>
+      )}
     </div>
   );
 }
