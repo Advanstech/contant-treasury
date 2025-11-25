@@ -418,7 +418,7 @@ export default function UserManagementDashboard() {
                     <td className="py-3 px-4">
                       <div className="text-sm">
                         <p className="text-foreground">{new Date(user.createdAt).toLocaleDateString()}</p>
-                        <p className="text-muted-foreground">{user.profileCompletion}% complete</p>
+                        <p className="text-muted-foreground">{user.profileCompletion || 0}% complete</p>
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -565,7 +565,7 @@ export default function UserManagementDashboard() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Profile Completion</label>
-                  <p className="text-foreground">{selectedUser.profileCompletion}%</p>
+                  <p className="text-foreground">{selectedUser.profileCompletion || 0}%</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">CSD Account</label>

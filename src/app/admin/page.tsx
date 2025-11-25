@@ -256,8 +256,12 @@ export default function AdminDashboard() {
                       <p className="text-sm text-muted-foreground">{auction.securityName}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-foreground">GHS {(auction.targetAmount / 1000000).toFixed(1)}M</p>
-                      <p className="text-sm text-muted-foreground">{new Date(auction.biddingCloseDate).toLocaleDateString()}</p>
+                      <p className="font-medium text-foreground">
+                        GHS {auction.targetAmount ? (auction.targetAmount / 1000000).toFixed(1) : '0'}M
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {auction.biddingCloseDate ? new Date(auction.biddingCloseDate).toLocaleDateString() : 'No date set'}
+                      </p>
                     </div>
                   </div>
                 ))
