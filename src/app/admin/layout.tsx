@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { AdminThemeProvider, useAdminTheme } from '@/contexts/AdminThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { AdminLogo } from '@/components/brand/Logo';
 
 const navigation = [
   {
@@ -196,13 +197,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           {/* Logo */}
           <div className="flex h-16 items-center justify-between px-6 border-b border-white/10">
             <Link href="/admin" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(25,95%,53%)] to-[hsl(25,95%,43%)] flex items-center justify-center shadow-lg shadow-[hsl(25,95%,53%)]/20 group-hover:shadow-[hsl(25,95%,53%)]/40 transition-shadow">
-                <Shield className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-base font-bold text-white tracking-tight">Constant Treasury</h1>
-                <p className="text-xs text-gray-400 font-medium">Admin Portal</p>
-              </div>
+              <AdminLogo className="scale-75" />
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}

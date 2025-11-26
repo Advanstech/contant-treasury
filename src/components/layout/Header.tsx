@@ -5,6 +5,7 @@ import { ChevronDown, TrendingUp, Wallet, BarChart3, LogIn, User, LogOut, Menu, 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { HeaderLogo } from '@/components/brand/Logo';
 
 export default function Header() {
   const { user, isAuthenticated, logout, loading } = useAuth();
@@ -34,12 +35,7 @@ export default function Header() {
         {/* Logo */}
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center transition-transform group-hover:scale-105">
-              <span className="font-bold text-primary-foreground text-sm">CT</span>
-            </div>
-            <span className="text-lg font-bold text-foreground hidden sm:inline">
-              Constant Treasury
-            </span>
+            <HeaderLogo />
           </Link>
         </div>
         

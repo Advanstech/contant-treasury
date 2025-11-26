@@ -1,0 +1,8 @@
+<svg width="66" height="66" viewBox="0 0 66 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo Container -->
+  <rect width="66" height="66" rx="12" fill="#F97316"/>
+  
+  <!-- CT Symbol - Path based with larger size -->
+  <path d="M16 20h14v4H24v4h12v4H24v8H16V20z" fill="white"/>
+  <path d="M34 20h14v4H38v4h12v4H38v8H34V20z" fill="white"/>
+</svg>

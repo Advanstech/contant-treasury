@@ -1,0 +1,28 @@
+<svg width="200" height="66" viewBox="0 0 200 66" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo Container -->
+  <rect width="66" height="66" rx="12" fill="#F97316"/>
+  
+  <!-- CT Symbol - Path based with larger size -->
+  <path d="M16 20h14v4H24v4h12v4H24v8H16V20z" fill="white"/>
+  <path d="M34 20h14v4H38v4h12v4H38v8H34V20z" fill="white"/>
+  
+  <!-- Constant Text - Path based with larger size -->
+  <path d="M82 40h-4v-12h-4v12h-4V28h4v4h4v-4h4v12z" fill="#1F2937"/>
+  <path d="M88 28h4v16h-4V28z" fill="#1F2937"/>
+  <path d="M96 28h4l4 12 4-12h4v16h-4v-10l-3 10h-2l-3-10v10h-4V28z" fill="#1F2937"/>
+  <path d="M116 28h4v16h-4V28z" fill="#1F2937"/>
+  <path d="M124 28h4v12h6v4h-10V28z" fill="#1F2937"/>
+  <path d="M136 28h4v16h-4V28z" fill="#1F2937"/>
+  <path d="M144 28h10v4h-6v4h6v4h-6v4h6v4h-10V28z" fill="#1F2937"/>
+  <path d="M160 28h4v12h6v4h-10V28z" fill="#1F2937"/>
+  
+  <!-- Treasury Text - Path based with larger size -->
+  <path d="M82 52h4v16h-4V52z" fill="#F97316"/>
+  <path d="M88 52h4l4 8 4-8h4v16h-4v-10l-3 10h-2l-3-10v10h-4V52z" fill="#F97316"/>
+  <path d="M108 52h10v4h-6v2h6v4h-6v2h6v4h-10V52z" fill="#F97316"/>
+  <path d="M124 52h4v16h-4V52z" fill="#F97316"/>
+  <path d="M132 52h10v4h-6v12h-4V52z" fill="#F97316"/>
+  <path d="M148 52h4v16h-4V52z" fill="#F97316"/>
+  <path d="M156 52h10v4h-6v2h6v4h-6v2h6v4h-10V52z" fill="#F97316"/>
+  <path d="M172 52h4v16h-4V52z" fill="#F97316"/>
+</svg>

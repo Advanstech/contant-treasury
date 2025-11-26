@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
+import { FooterLogo } from '@/components/brand/Logo';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -11,10 +12,7 @@ export default function Footer() {
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="font-bold text-primary-foreground text-sm">CT</span>
-              </div>
-              <span className="text-lg font-bold text-foreground">Constant Treasury</span>
+              <FooterLogo />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Ghana's premier digital platform for Treasury Bills, Bonds, and fixed-income securities.
