@@ -78,6 +78,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [step, setStep] = React.useState(1);
+  const organizationNameRef = React.useRef<HTMLInputElement>(null);
   const [formData, setFormData] = React.useState<FormData>({
     // Step 1: Account Type
     accountType: 'INDIVIDUAL',
@@ -166,10 +167,7 @@ export default function RegisterPage() {
           alert('Please select an account type');
           return false;
         }
-        if (formData.accountType !== 'INDIVIDUAL' && !formData.organizationName) {
-          alert('Organization name is required for this account type');
-          return false;
-        }
+        // Organization fields are now optional
         return true;
       
       case 2:
@@ -209,12 +207,29 @@ export default function RegisterPage() {
       return false;
     }
     
-    if (formData.accountType === 'INDIVIDUAL' && (!formData.idNumber || !formData.dateOfBirth)) {
+    if (formData.accountType === 'INDIVIDUAL' && !formData.idNumber) {
       alert('Please complete all verification fields');
       return false;
     }
     
     return true;
+  };
+
+  const handleAccountTypeSelect = (accountType: AccountType) => {
+    setFormData({ ...formData, accountType });
+    
+    // Auto-advance for individual, auto-focus for organizations
+    if (accountType === 'INDIVIDUAL') {
+      // Auto-advance to Step 2 after a short delay
+      setTimeout(() => {
+        setStep(2);
+      }, 300);
+    } else {
+      // Focus on organization name input after a short delay to allow DOM update
+      setTimeout(() => {
+        organizationNameRef.current?.focus();
+      }, 100);
+    }
   };
 
   const benefits = [
@@ -277,7 +292,7 @@ export default function RegisterPage() {
                   </p>
                 </div>
 
-                <div className="space-y-3 mb-6">
+                <div className="space-y-3">
                   {Object.entries(accountTypeConfig).map(([type, config]) => {
                     const Icon = config.icon;
                     const isSelected = formData.accountType === type;
@@ -285,7 +300,7 @@ export default function RegisterPage() {
                     return (
                       <div
                         key={type}
-                        onClick={() => setFormData({ ...formData, accountType: type as AccountType })}
+                        onClick={() => handleAccountTypeSelect(type as AccountType)}
                         className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all ${
                           isSelected
                             ? 'border-primary bg-primary/5'
@@ -323,26 +338,27 @@ export default function RegisterPage() {
                   })}
                 </div>
 
+                {/* Organization fields - moved closer to account type selection */}
                 {formData.accountType !== 'INDIVIDUAL' && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 mt-6">
                     <div>
                       <label htmlFor="organizationName" className="block text-sm font-semibold mb-2 text-foreground">
-                        Organization Name *
+                        Organization Name
                       </label>
                       <input
                         type="text"
                         id="organizationName"
+                        ref={organizationNameRef}
                         value={formData.organizationName}
                         onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                         className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                         placeholder="Enter registered organization name"
-                        required
                       />
                     </div>
 
                     <div>
                       <label htmlFor="registrationNumber" className="block text-sm font-semibold mb-2 text-foreground">
-                        Registration Number *
+                        Registration Number / TIN
                       </label>
                       <input
                         type="text"
@@ -351,7 +367,6 @@ export default function RegisterPage() {
                         onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
                         className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                         placeholder="Company Registration Number or TIN"
-                        required
                       />
                     </div>
                   </div>
@@ -685,7 +700,7 @@ export default function RegisterPage() {
 
                     <div>
                       <label htmlFor="dateOfBirth" className="block text-sm font-semibold mb-2 text-foreground">
-                        Date of Birth *
+                        Date of Birth (Optional)
                       </label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -695,7 +710,6 @@ export default function RegisterPage() {
                           value={formData.dateOfBirth}
                           onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                           className="w-full px-10 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                          required
                         />
                       </div>
                     </div>
