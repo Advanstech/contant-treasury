@@ -78,6 +78,7 @@ const navigation = [
       { name: 'User Management', href: '/admin/users' },
       { name: 'KYC Approvals', href: '/admin/users/kyc' },
       { name: 'CSD Accounts', href: '/admin/users/csd' },
+      { name: 'Activity Tracking', href: '/admin/user-activity' },
     ],
   },
   {

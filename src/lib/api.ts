@@ -252,9 +252,17 @@ export const authApi = {
     // Some backends may return a string (e.g., 'OK' or JSON as string). Normalize it.
     if (typeof data === 'string') {
       try {
+        // Check for empty string before parsing
+        if (data.trim() === '') {
+          throw new Error('Empty response from server');
+        }
         data = JSON.parse(data);
-      } catch {
+      } catch (parseError) {
         // Not JSON; treat as invalid payload
+        logger.error('Failed to parse profile response as JSON', { 
+          data: data.substring(0, 100), 
+          error: parseError 
+        }, 'API');
         data = null;
       }
     }

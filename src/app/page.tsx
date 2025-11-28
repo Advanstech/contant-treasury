@@ -171,26 +171,29 @@ export default function Home() {
       <section className="py-12 sm:py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-4xl mb-3 sm:mb-4">
-              Why Choose Constant Treasury?
-            </h2>
+            <Link href="/why-choose-constant-treasury">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight md:text-4xl mb-3 sm:mb-4 hover:text-primary transition-colors cursor-pointer">
+                Why Choose Constant Treasury?
+              </h2>
+            </Link>
             <p className="text-base sm:text-lg text-muted-foreground">
               We make investing in government securities simple, secure, and rewarding.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
-              <div 
+              <Link 
                 key={index}
-                className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 sm:p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5"
+                href="/why-choose-constant-treasury"
+                className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 sm:p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 block"
               >
                 <div className="mb-4 sm:mb-6 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20 transition-all group-hover:bg-primary/20 group-hover:ring-primary/40">
                   {feature.icon}
                 </div>
-                <h3 className="mb-2 sm:mb-3 text-lg sm:text-xl font-bold">{feature.title}</h3>
+                <h3 className="mb-2 sm:mb-3 text-lg sm:text-xl font-bold group-hover:text-primary transition-colors">{feature.title}</h3>
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
                 <div className="absolute -right-8 -bottom-8 h-16 w-16 rounded-full bg-primary/5 blur-2xl transition-all duration-300 group-hover:scale-150 group-hover:bg-primary/10"></div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
